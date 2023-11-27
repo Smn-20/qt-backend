@@ -14,7 +14,7 @@ urlpatterns = [
     path('roles/',RoleListView.as_view()),
     path('create-role/',RoleCreateView.as_view()),
     path('delete-role/<id>/',RoleDeleteView.as_view()),
-    
+    path('change-password/', ChangePasswordView.as_view()),
  
     
     #Files.

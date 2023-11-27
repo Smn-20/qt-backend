@@ -25,6 +25,15 @@ class UserSerializer(serializers.ModelSerializer):
             data['roles']=roles
         return data
 
+class ChangePasswordSerializer(serializers.Serializer):
+    model = User
+
+    """
+    Serializer for password change endpoint.
+    """
+    oldPassword = serializers.CharField(required=True)
+    newPassword = serializers.CharField(required=True)
+
 # class TaskSerializer(serializers.ModelSerializer):
 #     class Meta:
         
