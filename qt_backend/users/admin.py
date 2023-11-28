@@ -8,7 +8,9 @@ User=get_user_model()
 
 admin.site.register(User)
 admin.site.register(Role)
-# admin.site.register(File)
+admin.site.register(Task)
+admin.site.register(Project)
+admin.site.register(File)
 
 
 

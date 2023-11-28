@@ -223,10 +223,6 @@ class UserListView(ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-class UnassignedUsers(ListAPIView):
-    serializer_class = UserSerializer
-    def get_queryset(self):
-        return User.objects.filter(employees__isnull=True)
 
 class UserDeleteView(DestroyAPIView):
     queryset = User.objects.all()
@@ -246,18 +242,125 @@ class RoleDeleteView(DestroyAPIView):
     serializer_class = RoleSerializer
     lookup_field = 'id'
 
+class TaskListView(ListAPIView):
+    serializer_class = TaskSerializer
+    def get_queryset(self):
+        created_tasks = Task.objects.filter(created_by=self.request.user.id)
+        assigned_tasks = Task.objects.filter(assignees__in=[self.request.user.id])
+        tasks = created_tasks | assigned_tasks
+        return tasks
+
+class TaskDeleteView(DestroyAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    lookup_field = 'id'
+
+def create_task(request):
+    if request.method == 'POST':
+        files = request.FILES.getlist('files')
+        
+        
+
+        created_by = User.objects.get(id=request.POST['created_by'])
+
+        # Create the company
+        task = Task.objects.create(
+            name=request.POST['name'],
+            description=request.POST['description'],
+            created_by=created_by,
+            start_date=request.POST['startDate'],
+            end_date=request.POST['endDate'],
+            priority=request.POST['priority'],
+            
+        )
+        task.save()
+
+        for assignee in request.POST['assignees']:
+            assignee=User.objects.get(id=assignee)
+            task.assignees.add(assignee)
+
+        task.save()
+
+        for project in request.POST['projects']:
+            project=Project.objects.get(id=project)
+            task.projects.add(project)
+
+        task.save()
+
+        
+
+        for file in files:
+            File.objects.create(
+                task_id=task,
+                file=file,
+                name=file.name,
+                type=file.content_type,
+                size=file.size
+            )
+    
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
-# class FileListView(ListAPIView):
-#     serializer_class = FileSerializer
-#     def get_queryset(self):
-#         return File.objects.filter(staff_id=self.kwargs['staff_id'])
 
+class TaskUpdateView(UpdateAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    lookup_field = 'id'
 
+def update_task(request):
+    if request.method == 'POST':
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        print(body['name'])
+        # Create the company
+        
+        task = Task.objects.get(id=body['taskId'])
+        task.name=body['name'],
+        task.description=body['description'],
+        # task.start_date=body['startDate'],
+        # task.end_date=body['endDate'],
+        task.priority=body['priority'],
+            
+        task.assignees.clear()
+        task.projects.clear()
 
-# class FileDeleteView(DestroyAPIView):
-#     queryset = File.objects.all()
-#     serializer_class = FileSerializer
-#     lookup_field = 'id'
+        if body['status']:
+            if body['status'] == "started":
+                task.started = True
+            if body['status'] == "completed":
+                task.completed = True
+
+        task.save()
+
+        for assignee in body['assignees']:
+            assignee=User.objects.get(id=assignee)
+            task.assignees.add(assignee)
+
+        task.save()
+
+        for project in body['projects']:
+            project=Project.objects.get(id=project)
+            task.projects.add(project)
+
+        task.save()
+
     
     
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+class ProjectListView(ListAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    
+    
+class FileListView(ListAPIView):
+    serializer_class = FileSerializer
+    def get_queryset(self):
+        files = File.objects.filter(task_id=self.kwargs['task_id'])
+        return files

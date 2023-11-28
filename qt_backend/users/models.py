@@ -79,15 +79,32 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.active
 
 
-    
-# class File(models.Model):
-#     staff_id = models.ForeignKey('Employees',on_delete=models.SET_NULL,null=True,blank=True)
-#     name = models.CharField(max_length=100, null=True, blank=True)
-#     extension = models.CharField(max_length=100, null=True, blank=True)
-#     file = models.FileField(upload_to='media/employeefiles',null=True,blank=True)
-#     type = models.CharField(max_length=100, null=True, blank=True)
-#     size = models.CharField(max_length=100, null=True, blank=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
+
+class Task(models.Model):
+    name = models.CharField(max_length=100, null=True, blank=True)
+    description = models.CharField(max_length=100, null=True, blank=True)
+    created_by  = models.ForeignKey('User',on_delete=models.CASCADE,blank=True,related_name="created_by")
+    assignees  = models.ManyToManyField('User',blank=True,related_name="assignees")
+    projects  = models.ManyToManyField('Project',blank=True)
+    start_date = models.DateField(null=True, blank=True,default=timezone.now)
+    end_date = models.DateField(null=True, blank=True,default=timezone.now)
+    priority = models.CharField(max_length=100, null=True, blank=True)
+    started = models.BooleanField(default=False)
+    completed = models.BooleanField(default=False)
+
+class Project(models.Model):
+    name = models.CharField(max_length=100, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+
+class File(models.Model):
+    task_id = models.ForeignKey('Task',on_delete=models.CASCADE,null=True,blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    file = models.FileField(upload_to='media/',null=True,blank=True)
+    type = models.CharField(max_length=100, null=True, blank=True)
+    size = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
     
